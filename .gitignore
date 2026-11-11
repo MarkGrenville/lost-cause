@@ -1,0 +1,17 @@
+.env*
+!.env.example
+node_modules/
+.next/
+uploads/
+*.sqlite
+*.sqlite3
+.DS_Store
+.playwright-mcp/
+app/data/
+*.sqlite-wal
+*.sqlite-shm
+
+# Studio/agent files: kept on disk, not published
+CLAUDE.md
+/AGENTS.md
+.nocturnal/
