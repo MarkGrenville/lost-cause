@@ -16,7 +16,7 @@ A small, real website built stage by stage with AI coding agents, and filmed whi
 4. **Get where to look.** For each photo, the server makes 5 images: the whole photo, plus four overlapping zoomed-in quarters, each shrunk to fit 1024 px. They go to Claude (`claude-sonnet-5-5`) in one request, which answers in strict JSON: each spot the item might be, with a box, a confidence and a reason, plus where to look next. The app maps the boxes back onto your photo and marks them, most likely first. A one-photo search usually takes 4–9 seconds.
 5. **Found it, or Nope.** "Nope" gives the credit back, once per search.
 
-![A result: a crosshair on white earbuds in a desk organiser, 90% confidence, with where to look next](docs/screenshot-result.png)
+![A result: tweezers half under a test lead on a cluttered electronics bench, marked at 60% confidence, with where to look next](docs/screenshot-result.png)
 
 **Why it's built this way:** every decision, with the reason given at the time and what it cost, is in [docs/decisions.md](docs/decisions.md).
 
@@ -102,7 +102,7 @@ Version 1 was bright and jokey (a hand-drawn ring, sticker shadows, a "vs Mom" t
 
 ## Built with
 
-Next.js, Tailwind CSS, Firebase (App Hosting, Auth, Firestore, Cloud Storage, Cloud Functions), sharp, zod, the Anthropic TypeScript SDK and PayFast. Test photos in `test-photos/` are synthetic drawings or free-licence photos; sources and licences are in [`test-photos/SOURCES.md`](test-photos/SOURCES.md).
+Next.js, Tailwind CSS, Firebase (App Hosting, Auth, Firestore, Cloud Storage, Cloud Functions), sharp, zod, the Anthropic TypeScript SDK and PayFast. Test photos in `test-photos/` are synthetic drawings or free-licence photos; sources and licences are in [`test-photos/SOURCES.md`](test-photos/SOURCES.md) and [`test-photos/hard/SOURCES.md`](test-photos/hard/SOURCES.md). The result screenshot above uses "Electronics workbench" by James Bastow, CC BY-SA 2.0, via Wikimedia Commons.
 
 ## Licence
 

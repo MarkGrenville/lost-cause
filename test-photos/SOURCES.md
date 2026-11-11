@@ -13,3 +13,6 @@ Free-licence photos from Wikimedia Commons, downloaded as Commons' 1920 px / 161
 | `real/reading-corner-glasses.jpg` | reading glasses lying on a book on the side table, by the lamp | https://commons.wikimedia.org/wiki/File:Reading_corner_with_armchair_and_lamp.jpg | Kotivalo | CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0 |
 
 The CC BY-SA 3.0 photo is shown unmodified. If it appears in the video, credit "Photo: Kotivalo, CC BY-SA 3.0, via Wikimedia Commons".
+
+## Hard finds (11 Nov)
+Cluttered places where a small item is genuinely hard for a person to spot: a workbench (tweezers), a hoarder's dining table (a gold mascara tube) and a hoarders' attic (a cordless phone; the AI missed it, kept as an honest miss). Originals from Wikimedia Commons, CC BY-SA 2.0 / 4.0. Files, authors and exact credit lines are in [`hard/SOURCES.md`](hard/SOURCES.md).
