@@ -10,17 +10,13 @@ export const metadata: Metadata = { title: "Find it · Lost Cause" };
 
 function OutOfCredits() {
   return (
-    <div className="pop rounded-[2rem] bg-sun p-8 text-center md:p-12" data-testid="out-of-credits">
-      <p className="text-6xl" aria-hidden>
-        🧦
-      </p>
-      <h2 className="mt-4 text-4xl font-extrabold tracking-[-0.03em] md:text-5xl">You&apos;re out of lost causes.</h2>
-      <p className="mx-auto mt-3 max-w-md text-lg font-medium text-ink/75">
-        Zero credits left. The good news: whatever you lost will still be lost when you get back.
-      </p>
+    <div className="case p-8 text-center md:p-12" data-testid="out-of-credits">
+      <p className="label text-flare">No credits left</p>
+      <h2 className="mt-4 text-4xl uppercase md:text-5xl">Buy credits to open a case.</h2>
+      <p className="mx-auto mt-3 max-w-md text-lg text-ink/75">R10 a find. If a search doesn&apos;t help, the credit comes back.</p>
       <Link
         href="/#pricing"
-        className="pop mt-8 inline-block rounded-2xl bg-flare px-8 py-4 text-xl font-extrabold text-white transition hover:-translate-y-0.5"
+        className="label mt-8 inline-block rounded-[3px] bg-flare px-8 py-4 text-sm font-semibold text-white transition hover:brightness-110"
       >
         Buy credits →
       </Link>
@@ -38,8 +34,8 @@ export default function Page() {
   return (
     <SiteShell>
       <section className="mx-auto max-w-4xl px-5 py-14">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-flare">New search</p>
-        <h1 className="mb-10 mt-2 text-5xl font-extrabold leading-[0.95] tracking-[-0.03em] md:text-6xl">
+        <p className="label text-flare">New case</p>
+        <h1 className="mb-10 mt-2 text-5xl uppercase leading-[0.95] md:text-6xl">
           Where did you see it last?
         </h1>
         <Suspense fallback={<div className="h-96" />}>

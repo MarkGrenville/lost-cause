@@ -24,40 +24,42 @@ export function Verdict({ id, verdict }: { id: string; verdict: "found" | "nope"
 
   if (verdict === "found") {
     return (
-      <div className="pop rounded-3xl bg-mint p-6" data-testid="verdict">
-        <p className="text-3xl font-extrabold tracking-tight">Found it. One less lost cause.</p>
-        <p className="mt-1 font-semibold text-ink/70">Thanks for telling us. It helps the circles get better.</p>
+      <div className="case p-6" data-testid="verdict">
+        <p className="label text-mint">Status: located</p>
+        <p className="mt-2 text-3xl uppercase">Marked as found.</p>
+        <p className="mt-1 text-ink/70">Case closed. Thanks for telling us.</p>
       </div>
     );
   }
   if (verdict === "nope") {
     return (
-      <div className="pop rounded-3xl bg-white p-6" data-testid="verdict">
-        <p className="text-3xl font-extrabold tracking-tight">Nope. Your credit is back.</p>
-        <p className="mt-1 font-semibold text-ink/70">No find, no charge. Try another photo from a different angle.</p>
+      <div className="case p-6" data-testid="verdict">
+        <p className="label text-ink/60">Status: not found</p>
+        <p className="mt-2 text-3xl uppercase">Your credit is back.</p>
+        <p className="mt-1 text-ink/70">No find, no charge. A photo from another angle often helps.</p>
       </div>
     );
   }
   return (
-    <div className="pop rounded-3xl bg-ink p-6 text-cream" data-testid="verdict">
-      <p className="text-2xl font-extrabold tracking-tight">Did you find it?</p>
+    <div className="case p-6" data-testid="verdict">
+      <p className="text-2xl uppercase">Did you find it?</p>
       <div className="mt-4 flex flex-wrap gap-4">
         <button
           onClick={() => send("found")}
           disabled={busy}
-          className="pop-sm rounded-2xl bg-mint px-7 py-4 text-lg font-extrabold text-ink transition hover:-translate-y-0.5 disabled:opacity-60"
+          className="label rounded-[3px] bg-mint px-7 py-4 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
         >
           Found it
         </button>
         <button
           onClick={() => send("nope")}
           disabled={busy}
-          className="pop-sm rounded-2xl bg-cream px-7 py-4 text-lg font-extrabold text-ink transition hover:-translate-y-0.5 disabled:opacity-60"
+          className="label rounded-[3px] border border-ink/30 px-7 py-4 text-sm font-semibold transition hover:border-flare hover:text-flare disabled:opacity-60"
         >
           Nope (credit back)
         </button>
       </div>
-      {error && <p className="mt-3 font-bold text-sun">{error}</p>}
+      {error && <p className="mt-3 font-semibold text-flare">{error}</p>}
     </div>
   );
 }

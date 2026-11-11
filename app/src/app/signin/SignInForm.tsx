@@ -43,7 +43,7 @@ export function SignInForm({ next, config, emulator }: Props) {
       <button
         onClick={google}
         disabled={busy}
-        className="pop flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-6 py-4 text-lg font-extrabold transition hover:-translate-y-0.5 disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-[3px] bg-ink px-6 py-4 text-lg font-semibold text-cream transition hover:brightness-95 disabled:opacity-60"
       >
         <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden>
           <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
@@ -54,9 +54,9 @@ export function SignInForm({ next, config, emulator }: Props) {
         {busy ? "Opening Google…" : "Continue with Google"}
       </button>
       {error && <p className="mt-3 font-bold text-flare">{error}</p>}
-      <p className="mt-4 text-sm text-ink/60">No password to remember. Google tells us your email address and nothing else we keep.</p>
+      <p className="mt-4 text-sm text-ink/60">We keep your email address from Google and nothing else.</p>
       {emulator && (
-        <p className="mt-4 inline-block rounded-lg border-2 border-dashed border-ink px-3 py-1.5 font-mono text-xs font-bold">
+        <p className="label mt-4 inline-block border border-dashed border-ink/40 px-3 py-1.5">
           DEV: Firebase Auth emulator. No real Google account is used.
         </p>
       )}

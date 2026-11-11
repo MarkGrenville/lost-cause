@@ -1,30 +1,37 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Geist_Mono } from "next/font/google";
+import { Barlow_Condensed, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
-const display = Bricolage_Grotesque({
-  variable: "--font-display",
+const heading = Barlow_Condensed({
+  variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["500", "600"],
 });
 
-const mono = Geist_Mono({
+const body = IBM_Plex_Sans({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const mono = IBM_Plex_Mono({
   variable: "--font-mono-face",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
   title: "Lost Cause: we specialise in lost causes",
-  description:
-    "Snap the scene, spend a credit, follow the circles. AI that finds your keys, remote and that one sock.",
+  description: "Send photos of where you lost something. The AI marks where to look. R10 a find.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#fff4e0",
+  themeColor: "#0b1220",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${display.variable} ${mono.variable} antialiased`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${heading.variable} ${body.variable} ${mono.variable} antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );

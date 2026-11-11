@@ -9,7 +9,7 @@ export default function Page() {
     <LegalPage title="Refunds" updated="11 November 2026">
       <h2>No find, credit back</h2>
       <p>
-        When a search finishes, tap <strong>Nope</strong> if the circles didn&apos;t help. The credit goes straight back into your account.
+        When a search finishes, tap <strong>Nope</strong> if it didn&apos;t help. The credit goes straight back into your account.
         One credit back per search. No forms.
       </p>
 

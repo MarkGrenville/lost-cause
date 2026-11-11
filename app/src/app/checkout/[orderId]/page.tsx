@@ -34,13 +34,13 @@ async function Checkout({ params }: { params: Promise<{ orderId: string }> }) {
 
   return (
     <>
-      <div className="pop rounded-3xl bg-white p-8">
-        <p className="font-mono text-xs font-bold uppercase tracking-wider text-ink/60">Order {order.id}</p>
-        <h1 className="mt-2 text-4xl font-extrabold tracking-tight">{pack.name}</h1>
-        <p className="mt-1 text-lg font-semibold text-ink/70">{pack.searches} searches for {user.email}</p>
+      <div className="case p-8">
+        <p className="label text-ink/60">Order {order.id}</p>
+        <h1 className="mt-2 text-5xl uppercase">{pack.name}</h1>
+        <p className="mt-1 text-lg text-ink/70">{pack.searches} credits for {user.email}</p>
         <p className="mt-6 flex items-baseline gap-1">
           <span className="text-2xl font-extrabold">R</span>
-          <span className="text-7xl font-extrabold tracking-[-0.04em]">{rands(order.amount_cents)}</span>
+          <span className="font-head text-7xl">{rands(order.amount_cents)}</span>
         </p>
       </div>
 
@@ -48,12 +48,12 @@ async function Checkout({ params }: { params: Promise<{ orderId: string }> }) {
         {fields.map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
         ))}
-        <button className="pop w-full rounded-2xl bg-flare px-6 py-5 text-xl font-extrabold text-white transition hover:-translate-y-0.5">
+        <button className="label w-full rounded-[3px] bg-flare px-6 py-5 text-sm font-semibold text-white transition hover:brightness-110">
           Pay R{rands(order.amount_cents)} with PayFast →
         </button>
       </form>
       {payfast.sandbox && (
-        <p className="mt-4 rounded-xl border-2 border-dashed border-ink bg-sun/40 px-4 py-3 font-mono text-xs font-bold">
+        <p className="label mt-4 border border-dashed border-ink/40 px-4 py-3">
           SANDBOX: this goes to sandbox.payfast.co.za. No real money moves.
         </p>
       )}
@@ -65,7 +65,7 @@ export default function Page(props: PageProps<"/checkout/[orderId]">) {
   return (
     <SiteShell>
       <section className="mx-auto max-w-lg px-5 py-16">
-        <p className="mb-4 font-mono text-xs font-semibold uppercase tracking-[0.2em] text-flare">Checkout</p>
+        <p className="label mb-4 text-flare">Checkout</p>
         <Suspense fallback={<div className="h-96" />}>
           <Checkout params={props.params} />
         </Suspense>

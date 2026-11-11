@@ -12,31 +12,31 @@ export type Pack = {
 
 export const PACKS: Pack[] = [
   {
-    id: "sock-drawer",
-    name: "The Sock Drawer",
+    id: "sock-drawer", // ids are from version 1; old orders still point at them
+    name: "3 finds",
     searches: 3,
     priceCents: 3000,
-    blurb: "For the occasional AirPod and the sock that never had a partner anyway.",
+    blurb: "For one lost thing and a second look.",
     color: "bg-white",
     badge: null,
   },
   {
     id: "couch-cushions",
-    name: "The Couch Cushions",
+    name: "10 finds",
     searches: 10,
     priceCents: 10000,
-    blurb: "Remotes, coins, a fork from 2019. If it fell, it's in there. We'll circle it.",
-    color: "bg-sun",
-    badge: "Most lost",
+    blurb: "For a household that loses things often.",
+    color: "bg-white",
+    badge: "Most chosen",
   },
   {
     id: "teenagers-bedroom",
-    name: "The Teenager's Bedroom",
+    name: "25 finds",
     searches: 25,
     priceCents: 25000,
-    blurb: "Archaeology-grade. Recommended for gap years, house moves and families of five.",
-    color: "bg-mint",
-    badge: "Brave",
+    blurb: "For moving house, or a family.",
+    color: "bg-white",
+    badge: null,
   },
 ];
 

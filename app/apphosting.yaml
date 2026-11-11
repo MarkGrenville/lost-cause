@@ -13,9 +13,10 @@ runConfig:
 
 env:
   # --- Payments: sandbox and live differ only by these values ---
-  # Mark switches this to "live" (and the three PAYFAST_* secrets to the live ones) himself.
+  # Live since 11 Nov (Mark's go). The three PAYFAST_* secrets hold the live values (version 2);
+  # version 1 of each is the sandbox merchant, kept for going back to the sandbox.
   - variable: PAYFAST_MODE
-    value: sandbox
+    value: live
   - variable: PAYFAST_MERCHANT_ID
     secret: lost-cause-payfast-merchant-id
   - variable: PAYFAST_MERCHANT_KEY

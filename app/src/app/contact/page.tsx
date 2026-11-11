@@ -15,7 +15,7 @@ export default function Page() {
         About an order? Include your order number (it starts with <span className="font-mono">LC-</span> and is on your account page). We
         aim to reply within 2 working days.
       </p>
-      <p>We can&apos;t help find things by email. That&apos;s what the circles are for.</p>
+      <p>We can&apos;t help find things by email. That&apos;s what the search is for.</p>
     </LegalPage>
   );
 }

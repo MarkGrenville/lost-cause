@@ -96,12 +96,12 @@ export function FindForm({ credits }: { credits: number }) {
           setDragging(false);
           add(e.dataTransfer.files);
         }}
-        className={`pop rounded-3xl border-dashed p-6 transition md:p-8 ${dragging ? "bg-sun" : "bg-white"}`}
+        className={`case p-6 transition md:p-8 ${dragging ? "bg-sun" : ""}`}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-2xl font-extrabold tracking-tight">Snap the scene</p>
-            <p className="text-ink/70">
+            <p className="label text-flare">01 · Send the scene</p>
+            <p className="mt-2 text-ink/70">
               Drop 1–5 photos of where it was last seen. JPEG, PNG or WebP, up to 10 MB each. We strip location data, and delete photos after 7 days.
             </p>
           </div>
@@ -109,15 +109,15 @@ export function FindForm({ credits }: { credits: number }) {
             <button
               type="button"
               onClick={() => cameraRef.current?.click()}
-              className="pop-sm rounded-2xl bg-sky px-4 py-3 font-extrabold md:hidden"
+              className="label rounded-[3px] border border-ink/30 px-4 py-3 md:hidden"
             >
-              📸 Take a photo
+              Take a photo
             </button>
             <button
               type="button"
               onClick={() => pickRef.current?.click()}
               disabled={photos.length >= MAX_PHOTOS}
-              className="pop-sm rounded-2xl bg-sun px-5 py-3 font-extrabold disabled:opacity-50"
+              className="label rounded-[3px] border border-flare/70 px-5 py-3 text-flare hover:bg-flare hover:text-white disabled:opacity-50"
             >
               Choose photos
             </button>
@@ -150,7 +150,7 @@ export function FindForm({ credits }: { credits: number }) {
         {photos.length > 0 ? (
           <ul className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
             {photos.map((p, i) => (
-              <li key={p.key} className="pop-sm relative overflow-hidden rounded-2xl bg-cream">
+              <li key={p.key} className="relative overflow-hidden border border-ink/20 bg-cream">
                 {p.url ? (
                   // eslint-disable-next-line @next/next/no-img-element -- local blob preview
                   <img src={p.url} alt={`Photo ${i + 1}: ${p.file.name}`} className="aspect-square w-full object-cover" />
@@ -165,26 +165,26 @@ export function FindForm({ credits }: { credits: number }) {
                   type="button"
                   onClick={() => remove(p.key)}
                   aria-label={`Remove photo ${i + 1}`}
-                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-lg font-extrabold leading-none hover:bg-flare hover:text-white"
+                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center border border-ink/40 bg-cream/90 text-lg leading-none hover:bg-flare hover:text-white"
                 >
                   ×
                 </button>
-                <span className="absolute bottom-2 left-2 rounded-md bg-ink px-2 py-0.5 font-mono text-[11px] font-bold text-cream">
+                <span className="label absolute bottom-2 left-2 bg-cream/85 px-2 py-0.5 text-ink">
                   {i + 1}/{MAX_PHOTOS}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <div className="mt-6 flex h-36 items-center justify-center rounded-2xl border-[3px] border-dashed border-ink/30 text-lg font-bold text-ink/40">
+          <div className="label mt-6 flex h-36 items-center justify-center border border-dashed border-ink/25 text-ink/45">
             Drag photos here
           </div>
         )}
       </div>
 
-      <div className="pop rounded-3xl bg-white p-6 md:p-8">
-        <label htmlFor="description" className="text-2xl font-extrabold tracking-tight">
-          What did you lose, and roughly where?
+      <div className="case p-6 md:p-8">
+        <label htmlFor="description" className="label text-flare">
+          02 · What did you lose, and roughly where?
         </label>
         <textarea
           id="description"
@@ -192,21 +192,21 @@ export function FindForm({ credits }: { credits: number }) {
           onChange={(e) => setDescription(e.target.value)}
           maxLength={500}
           rows={3}
-          placeholder="Car keys with a black fob. Last seen near the purple couch, probably fell between the cushions."
-          className="pop-sm mt-4 w-full rounded-2xl bg-cream px-5 py-4 text-lg font-semibold outline-none placeholder:text-ink/35 focus:bg-sun/20"
+          placeholder="Car keys with a black fob. Last seen near the couch, probably between the cushions."
+          className="mt-4 w-full rounded-[3px] border border-ink/20 bg-cream px-5 py-4 text-lg outline-none placeholder:text-ink/35 focus:border-flare"
         />
-        <p className="mt-1 text-right font-mono text-xs text-ink/50">{description.length}/500</p>
+        <p className="label mt-1 text-right text-ink/50">{description.length}/500</p>
       </div>
 
-      {error && <p className="pop-sm rounded-2xl bg-white px-5 py-3 font-bold text-flare">{error}</p>}
+      {error && <p className="case px-5 py-3 font-semibold text-flare">{error}</p>}
 
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="font-mono text-sm font-semibold">
+        <p className="label text-ink/70">
           You have {credits} credit{credits === 1 ? "" : "s"}. This search uses 1.
         </p>
         <button
           disabled={busy}
-          className="pop rounded-2xl bg-flare px-8 py-4 text-xl font-extrabold text-white transition hover:-translate-y-0.5 disabled:opacity-60"
+          className="label rounded-[3px] bg-flare px-8 py-4 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-60"
         >
           {busy ? "Uploading…" : "Spend 1 credit →"}
         </button>

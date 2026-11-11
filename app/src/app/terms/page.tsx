@@ -14,7 +14,7 @@ export default function Page() {
 
       <h2>What Lost Cause does</h2>
       <p>
-        You upload photos of the place you lost something and describe it. An AI model looks at the photos and circles the spots where it
+        You upload photos of the place you lost something and describe it. An AI model looks at the photos and marks the spots where it
         thinks the thing might be. It is a well-informed guess, not a promise. It can only see what is in your photos, and it can be wrong.
       </p>
 

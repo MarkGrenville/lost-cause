@@ -25,58 +25,57 @@ async function Account({ searchParams }: { searchParams: Promise<Flash> }) {
   return (
     <>
       {justPaid && (
-        <div className="pop mb-10 rounded-3xl bg-mint p-6" data-testid="credits-landed">
-          <p className="text-3xl font-extrabold tracking-tight">
-            +{justPaid.credits} credits landed. Go find that sock.
-          </p>
-          <p className="mt-1 font-semibold">
+        <div className="case mb-10 p-6" data-testid="credits-landed">
+          <p className="label text-mint">Payment confirmed</p>
+          <p className="mt-2 text-3xl uppercase">+{justPaid.credits} credits added.</p>
+          <p className="mt-1 text-ink/75">
             Order {justPaid.id} · R{rands(justPaid.amount_cents)} paid{payfast.sandbox ? " on the PayFast sandbox" : " with PayFast"}
           </p>
           {justPaid.confirmed_via === "dev_return" && (
-            <p className="mt-3 inline-block rounded-lg border-2 border-dashed border-ink bg-white/70 px-3 py-1.5 font-mono text-xs font-bold">
+            <p className="label mt-3 inline-block border border-dashed border-ink/40 px-3 py-1.5">
               DEV ONLY: confirmed by the return URL because PayFast&apos;s ITN can&apos;t reach localhost
             </p>
           )}
         </div>
       )}
       {flash.cancelled && (
-        <div className="pop-sm mb-10 rounded-2xl bg-white p-5 font-bold">Payment cancelled. No credits, no charge, no lecture.</div>
+        <div className="case mb-10 p-5 font-semibold">Payment cancelled. Nothing was charged.</div>
       )}
       {flash.slow && (
-        <div className="pop-sm mb-10 rounded-2xl bg-white p-5 font-bold">That&apos;s a lot of orders in an hour. Try again a little later.</div>
+        <div className="case mb-10 p-5 font-semibold">That&apos;s a lot of orders in an hour. Try again a little later.</div>
       )}
       {flash.pending && !justPaid && (
-        <div className="pop-sm mb-10 rounded-2xl bg-white p-5 font-bold" data-testid="waiting-for-itn">
+        <div className="case mb-10 p-5 font-semibold" data-testid="waiting-for-itn">
           <WaitForItn />
           Waiting for PayFast to confirm order {flash.pending}. Credits appear as soon as it does.
         </div>
       )}
-      <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-flare">Your account</p>
-      <h1 className="mt-2 break-words text-4xl font-extrabold tracking-[-0.03em] md:text-5xl">{user.email}</h1>
+      <p className="label text-flare">Your account</p>
+      <h1 className="mt-2 break-words text-4xl md:text-5xl">{user.email}</h1>
 
       <div className="mt-10 grid gap-6 md:grid-cols-[1.2fr_1fr]">
-        <div className="pop rounded-3xl bg-sun p-8">
-          <p className="font-mono text-xs font-bold uppercase tracking-wider">Credit balance</p>
+        <div className="case p-8">
+          <p className="label text-ink/60">Credit balance</p>
           <p className="mt-2 flex items-baseline gap-3">
-            <span className="text-8xl font-extrabold tracking-[-0.05em]" data-testid="credit-balance">
+            <span className="font-head text-8xl" data-testid="credit-balance">
               {user.credits}
             </span>
-            <span className="text-2xl font-extrabold">credit{user.credits === 1 ? "" : "s"}</span>
+            <span className="label text-ink/70">credit{user.credits === 1 ? "" : "s"}</span>
           </p>
           <p className="mt-2 font-medium text-ink/70">
             {user.credits === 0
-              ? "Nothing to search with yet. Which is ironic, given you've lost something."
+              ? "No credits yet. One credit is one search, R10 a find."
               : "One credit per search. No find, credit back."}
           </p>
           <Link
             href="/#pricing"
-            className="pop mt-7 inline-block rounded-2xl bg-flare px-7 py-4 text-lg font-extrabold text-white transition hover:-translate-y-0.5"
+            className="label mt-7 inline-block rounded-[3px] bg-flare px-7 py-4 text-sm font-semibold text-white transition hover:brightness-110"
           >
             Buy credits →
           </Link>
         </div>
-        <div className="pop-sm rounded-3xl bg-white p-8">
-          <p className="font-mono text-xs font-bold uppercase tracking-wider">Orders</p>
+        <div className="case p-8">
+          <p className="label text-ink/60">Orders</p>
           {orders.length === 0 ? (
             <p className="mt-3 text-ink/60">None yet.</p>
           ) : (
@@ -99,7 +98,7 @@ async function Account({ searchParams }: { searchParams: Promise<Flash> }) {
             </ul>
           )}
           <form action={signOut} className="mt-8">
-            <button className="font-bold underline decoration-2 underline-offset-4 hover:text-flare">Sign out</button>
+            <button className="label text-ink/70 hover:text-flare">Sign out</button>
           </form>
         </div>
       </div>

@@ -1,22 +1,24 @@
 # Lost Cause
 
-**We specialise in lost causes.** Take a photo of where you lost something, spend a credit, and an AI circles where to look.
+**We specialise in lost causes.** Send photos of where you lost something, spend a credit, and an AI marks where to look. R10 a find.
 
 **Live:** https://lost-cause--lost-cause-2026.europe-west4.hosted.app
 
-A joke-but-real website, built stage by stage with AI coding agents: a landing page, Google sign-in, credit packs paid through PayFast, photo upload, and an AI vision search that draws circles on your photo. It runs on Firebase. If this can be built, so can your idea.
+A small, real website built stage by stage with AI coding agents, and filmed while it was built: a landing page, Google sign-in, credit packs paid through PayFast, photo upload, and an AI vision search that marks the likely spots on your photo. It runs on Firebase and takes real payments in rand. If this can be built, so can your idea.
 
-![A search result: the AI has circled a pair of white earbuds in a desk organiser, 93% sure, found in 4.0 seconds](docs/screenshot-result.png)
+![Lost Cause: the landing page](docs/screenshot-home.jpg)
 
 ## How it works
 
 1. **Sign in with Google.**
-2. **Buy credits.** R10 a find: 3 for R30, 10 for R100, 25 for R250, paid through PayFast in rand.
-3. **Snap the scene.** Upload 1–5 photos of the place you lost it, plus a sentence about what you lost. Location data is stripped from the photos before they're stored.
-4. **Follow the circles.** For each photo, the server makes 5 images: the whole photo, plus four overlapping zoomed-in quarters, each shrunk to fit 1024 px. They go to Claude (`claude-sonnet-5-5`) in one request, which answers in strict JSON: each spot the item might be, with a box, a confidence and a reason, plus "where to look next". The app maps the boxes back onto your photo and draws circles, most likely first. A one-photo search usually takes 4–9 seconds.
-5. **Found it, or Nope.** "Nope" gives your credit back, once per search.
+2. **Buy credits.** R10 a find: 3 finds for R30, 10 for R100, 25 for R250, paid through PayFast.
+3. **Send the scene.** One to five photos of where it was last seen, and a sentence about what's missing. Location data is removed before the photos are stored.
+4. **Get where to look.** For each photo, the server makes 5 images: the whole photo, plus four overlapping zoomed-in quarters, each shrunk to fit 1024 px. They go to Claude (`claude-sonnet-5-5`) in one request, which answers in strict JSON: each spot the item might be, with a box, a confidence and a reason, plus where to look next. The app maps the boxes back onto your photo and marks them, most likely first. A one-photo search usually takes 4–9 seconds.
+5. **Found it, or Nope.** "Nope" gives the credit back, once per search.
 
-![Pricing: R10 a find](docs/screenshot-pricing.png)
+![A result: a crosshair on white earbuds in a desk organiser, 90% confidence, with where to look next](docs/screenshot-result.png)
+
+**Why it's built this way:** every decision, with the reason given at the time and what it cost, is in [docs/decisions.md](docs/decisions.md).
 
 ## What it runs on
 
@@ -28,14 +30,14 @@ A joke-but-real website, built stage by stage with AI coding agents: a landing p
 | Sign-in | Firebase Auth with Google, then an httpOnly session cookie | |
 | Cleanup | A scheduled Cloud Function deletes photos after 7 days | europe-west4 |
 | AI | Anthropic's Claude, one vision request per photo | |
-| Payments | PayFast | |
+| Payments | PayFast, live | |
 
 Every credit change happens in a Firestore transaction: a credit is spent once, "Nope" refunds once, a failed search refunds once, and a payment credits once.
 
 ## Payments (PayFast)
 
 - **Checkout:** a pack button creates an order with the price from the server, then posts PayFast's payment form, signed on the server (MD5 of the fields in PayFast's order plus a passphrase that is never sent).
-- **Confirmation:** only PayFast's ITN (Instant Transaction Notification) adds credits. The handler checks the signature, that the request comes from a published PayFast address, the amount, and asks PayFast's server to confirm, then credits the order exactly once. The browser's return from PayFast only waits for that.
+- **Confirmation:** only PayFast's ITN (Instant Transaction Notification) adds credits. The handler checks the signature, that the request comes from a published PayFast address, the amount, and asks PayFast's server to confirm, then credits the order exactly once. The browser's return from PayFast proves nothing, so it only waits for the ITN.
 - **Sandbox and live** differ only by configuration: `PAYFAST_MODE` and the merchant ID, key and passphrase.
 - Behind App Hosting there are three proxies in `X-Forwarded-For` (`ITN_PROXY_HOPS=3`), measured from a real sandbox ITN.
 - In local development PayFast can't reach `localhost`, so with the sandbox, and only in development, the return URL confirms the order instead, labelled **DEV ONLY**.
@@ -51,7 +53,7 @@ Every credit change happens in a Firestore transaction: a credit is spent once, 
 
 ## What a search costs
 
-Each photo is one Claude request with 5 images: about 5,700–6,500 input and 290–790 output tokens, so **about $0.014–0.019 per photo** (roughly R0.25–0.35) at Sonnet 5.5's $2 / $10 per million tokens. Every call is logged with its tokens and cost.
+Each photo is one Claude request with 5 images: about 5,700–6,500 input and 290–790 output tokens, so **about $0.014–0.019 per photo** (roughly R0.25–0.35) at Sonnet 5.5's $2 / $10 per million tokens, measured on real searches. Every call is logged with its tokens and cost.
 
 ## Run it locally
 
@@ -85,13 +87,17 @@ Listed in [`app/.env.example`](app/.env.example). In production they're set in [
 | `ITN_PROXY_HOPS` | Proxies in front of the app, for the ITN source check (`3` on App Hosting). |
 | `FIREBASE_WEBAPP_CONFIG` | The public Firebase web config for the sign-in page. |
 
+## Two versions
+
+Version 1 was bright and jokey (a hand-drawn ring, sticker shadows, a "vs Mom" table). Version 2 is a quiet investigator's desk: a dark navy page, paper-coloured text, one amber accent, and a thin crosshair ring on a find. The hero and background images were made with ChatGPT. The change was made at the level of the colour tokens, so every page changed at once and no flow or check moved.
+
 ## Honest limits
 
 - **Google sign-in on the live site is waiting for one switch in the Firebase console**, so nobody can sign in there yet.
-- **Payments are on the PayFast sandbox.** The live site was tested end to end with a real sandbox ITN. Live PayFast isn't switched on yet.
+- **Live payments are switched on but untested with real money.** PayFast's live page accepts the signed checkout; the first real purchase is still to come.
 - **The AI can be wrong.** It works best when the item is visible somewhere in the photo. It can't see under cushions, and says so with low confidence.
 - The "photo of a person" check hasn't been tested against a real photo of a person yet.
-- A circle at the very edge of a photo gets clipped, and labels can overlap when two circles are close.
+- Labels can overlap when two marks are close together.
 - There's no self-serve account deletion yet; it's by email (see the privacy page).
 - No custom domain yet.
 
