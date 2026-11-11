@@ -1,0 +1,10 @@
+rules_version = '2';
+// Photos are private. Nobody reads them from the bucket directly; the server streams each
+// photo only to the person who uploaded it (/api/searches/[id]/photos/[idx]).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

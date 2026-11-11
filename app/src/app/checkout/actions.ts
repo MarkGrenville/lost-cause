@@ -13,6 +13,7 @@ export async function buyPack(form: FormData) {
   const user = await currentUser();
   if (!user) redirect(`/signin?next=${encodeURIComponent("/#pricing")}`);
 
-  const order = createOrder(user.id, pack);
+  const order = await createOrder(user.id, pack);
+  if (!order) redirect("/account?slow=1"); // over the order rate limit
   redirect(`/checkout/${order.id}`);
 }

@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { Nav } from "@/components/SiteShell";
 import { PACKS } from "@/lib/packs";
 import { buyPack } from "./checkout/actions";
+import { LegalLinks } from "@/components/Legal";
 
 function Hero() {
   return (
@@ -340,8 +341,9 @@ function Footer() {
           We&apos;re on it.
         </p>
         <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t-[3px] border-ink pt-6 font-mono text-sm font-semibold">
-          <span>© {2026} Lost Cause · Not a real company (yet)</span>
+          <span>© {2026} Web Footprint · Lost Cause</span>
           <span>Made in South Africa, between the couch cushions.</span>
+          <LegalLinks />
         </div>
       </div>
     </footer>

@@ -1,24 +1,26 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { currentUser } from "@/lib/auth";
-import { getSearch, photosFor, UPLOADS_DIR } from "@/lib/searches";
+import { bucket } from "@/lib/firebase";
+import { getSearch } from "@/lib/searches";
 
-/** Serve one uploaded photo, only to the person who uploaded it. */
+/** Serve one uploaded photo from private Cloud Storage, only to the person who uploaded it. */
 export async function GET(_req: Request, ctx: RouteContext<"/api/searches/[id]/photos/[idx]">) {
   const { id, idx } = await ctx.params;
   const user = await currentUser();
-  const search = getSearch(id);
+  const search = await getSearch(id);
   if (!user || !search || search.user_id !== user.id) return new Response("Not found", { status: 404 });
 
-  const photo = photosFor(id).find((p) => p.idx === Number(idx));
+  const photo = search.photos.find((p) => p.idx === Number(idx));
   if (!photo) return new Response("Not found", { status: 404 });
 
-  // file_name is ours ("1.jpg"), never user input, so no path traversal.
-  const buf = await fs.readFile(path.join(UPLOADS_DIR, search.id, photo.file_name));
+  // photo.path is ours ("searches/<id>/1.jpg"), never user input.
+  const file = bucket().file(photo.path);
+  const [exists] = await file.exists();
+  if (!exists) return new Response("Deleted", { status: 410 }); // after 7 days, or declined
+  const [buf] = await file.download();
   return new Response(new Uint8Array(buf), {
     headers: {
       "Content-Type": photo.mime,
-      "Cache-Control": "private, max-age=3600",
+      "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
     },
   });

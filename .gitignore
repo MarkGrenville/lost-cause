@@ -15,3 +15,12 @@ app/data/
 CLAUDE.md
 /AGENTS.md
 .nocturnal/
+
+# Firebase emulators and CLI
+emulator-data/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+storage-debug.log
+functions/node_modules/
+!.env.development

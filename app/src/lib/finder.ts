@@ -1,15 +1,14 @@
 import "server-only";
-import fs from "node:fs/promises";
-import path from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { z } from "zod";
-import { db } from "./db";
-import { getSearch, photosFor, UPLOADS_DIR, type SearchPhoto } from "./searches";
+import { FieldValue } from "firebase-admin/firestore";
+import { bucket, db } from "./firebase";
+import { failAndRefund, getSearch, searchRef, type SearchPhoto } from "./searches";
+import { reserveCall, settleCall, SpendCapReached } from "./spend";
 
 export const MODEL = process.env.LOST_CAUSE_MODEL || "claude-sonnet-5-5";
 const TILE_PX = 1024; // every image we send is shrunk (or zoomed) to fit 1024px
-const AI_CALL_LIMIT = Number(process.env.LOST_CAUSE_AI_CALL_LIMIT || 30); // dev budget for the stage
 // USD per million tokens (input, output). Unknown models are priced as Sonnet and flagged.
 const PRICES: Record<string, [number, number]> = {
   "claude-sonnet-5-5": [2, 10],
@@ -71,8 +70,9 @@ const TILE_IDS = ["T0", "T1", "T2", "T3", "T4"] as const;
 const OUTPUT_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["candidates", "where_to_look_next", "summary"],
+  required: ["mainly_a_person", "candidates", "where_to_look_next", "summary"],
   properties: {
+    mainly_a_person: { type: "boolean" },
     candidates: {
       type: "array",
       items: {
@@ -99,6 +99,7 @@ const OUTPUT_SCHEMA = {
 } as const;
 
 const Answer = z.object({
+  mainly_a_person: z.boolean(),
   candidates: z.array(
     z.object({
       tile: z.enum(TILE_IDS),
@@ -113,6 +114,8 @@ const Answer = z.object({
 });
 
 const SYSTEM = `You are the finder for Lost Cause, a service that helps people find a lost physical object in photos of the place they lost it.
+
+First decide mainly_a_person: true if the photo is mainly of a person (a portrait, a selfie, someone filling much of the frame). We don't search photos of people: if it is true, return no candidates, no where_to_look_next and an empty summary. A room where a person is small or partly in the background is not "mainly a person".
 
 You get several images of ONE photo: T0 is the whole photo, T1-T4 are zoomed, overlapping crops of it. Look carefully at every tile; small objects are often only clear in a zoomed tile.
 
@@ -178,25 +181,8 @@ function mapToPhoto(answer: z.infer<typeof Answer>, tiles: Tile[]): Mapped[] {
 
 // ---------------------------------------------------------------- one vision call per photo
 
-class BudgetExceeded extends Error {}
-
-/** Reserve a row in ai_calls before calling, so the dev budget can't be overrun by parallel calls. */
-function reserveCall(searchId: string, idx: number) {
-  return db.transaction(() => {
-    if (process.env.NODE_ENV !== "production") {
-      const used = (db.prepare("SELECT COUNT(*) AS n FROM ai_calls").get() as { n: number }).n;
-      if (used >= AI_CALL_LIMIT) throw new BudgetExceeded(`Dev AI budget used up (${used}/${AI_CALL_LIMIT} vision calls).`);
-    }
-    return Number(db.prepare("INSERT INTO ai_calls (search_id, photo_idx, model) VALUES (?, ?, ?)").run(searchId, idx, MODEL).lastInsertRowid);
-  })();
-}
-
-async function searchPhoto(searchId: string, description: string, photo: SearchPhoto): Promise<PhotoResult & { cost: number }> {
-  if (photo.mime === "image/heic") {
-    return { idx: photo.idx, width: 0, height: 0, candidates: [], where_to_look_next: [], summary: "", cost: 0,
-      skipped: "HEIC photos can't be read by the AI step yet. Try a JPEG or PNG of the same spot." };
-  }
-  const file = await fs.readFile(path.join(UPLOADS_DIR, searchId, photo.file_name));
+async function searchPhoto(searchId: string, description: string, photo: SearchPhoto): Promise<PhotoResult & { cost: number; declined?: boolean }> {
+  const [file] = await bucket().file(photo.path).download();
   const { W, H, tiles } = await makeTiles(file);
 
   const content: Anthropic.Beta.BetaContentBlockParam[] = [];
@@ -206,7 +192,7 @@ async function searchPhoto(searchId: string, description: string, photo: SearchP
   }
   content.push({ type: "text", text: `What they lost, in their words: """${description}"""\n\nFind it in this photo.` });
 
-  const callId = reserveCall(searchId, photo.idx);
+  const callId = await reserveCall(searchId, photo.idx, MODEL);
   const started = Date.now();
   try {
     const res = await client.beta.messages.create({
@@ -221,15 +207,20 @@ async function searchPhoto(searchId: string, description: string, photo: SearchP
 
     const [inP, outP] = PRICES[res.model] ?? PRICES["claude-sonnet-5-5"];
     const cost = (res.usage.input_tokens * inP + res.usage.output_tokens * outP) / 1e6;
-    db.prepare(
-      "UPDATE ai_calls SET served_by = ?, input_tokens = ?, output_tokens = ?, cost_usd = ?, stop_reason = ?, ms = ? WHERE id = ?",
-    ).run(res.model, res.usage.input_tokens, res.usage.output_tokens, cost, res.stop_reason, Date.now() - started, callId);
+    await settleCall(callId, cost, {
+      served_by: res.model, input_tokens: res.usage.input_tokens, output_tokens: res.usage.output_tokens,
+      stop_reason: res.stop_reason, ms: Date.now() - started,
+    });
 
     if (res.stop_reason === "refusal") throw new Error("The AI declined to search this photo.");
     if (res.stop_reason === "max_tokens") throw new Error("The AI ran out of room before finishing.");
     const text = res.content.find((b) => b.type === "text");
     if (!text || text.type !== "text") throw new Error("The AI returned no answer.");
     const answer = Answer.parse(JSON.parse(text.text));
+    if (answer.mainly_a_person) {
+      return { idx: photo.idx, width: W, height: H, cost, candidates: [], where_to_look_next: [], summary: "", declined: true,
+        skipped: "This looks like a photo of a person. We don't search photos of people, so this one was skipped and deleted." };
+    }
 
     return {
       idx: photo.idx, width: W, height: H, cost,
@@ -239,38 +230,47 @@ async function searchPhoto(searchId: string, description: string, photo: SearchP
     };
   } catch (err) {
     const msg = err instanceof Anthropic.APIError ? `API ${err.status}: ${err.message}` : (err as Error).message;
-    db.prepare("UPDATE ai_calls SET error = ?, ms = ? WHERE id = ?").run(msg.slice(0, 500), Date.now() - started, callId);
+    await settleCall(callId, 0, { error: msg.slice(0, 500), ms: Date.now() - started }).catch(() => {});
     throw err;
   }
 }
 
-/** Run a waiting search exactly once. On a technical failure the credit goes back. */
+/** Run a waiting search exactly once. On a technical failure the credit goes back (once). */
 export async function runSearch(searchId: string) {
-  const claim = db.prepare("UPDATE searches SET status = 'searching', started_at = datetime('now') WHERE id = ? AND status = 'waiting'").run(searchId);
-  if (claim.changes !== 1) return;
-  const search = getSearch(searchId)!;
+  const claimed = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(searchRef(searchId));
+    if (!snap.exists || snap.get("status") !== "waiting") return false;
+    tx.update(snap.ref, { status: "searching", started_at: FieldValue.serverTimestamp() });
+    return true;
+  });
+  if (!claimed) return;
+  const search = (await getSearch(searchId))!;
   const t0 = Date.now();
 
   try {
-    const photos = await Promise.all(photosFor(searchId).map((p) => searchPhoto(searchId, search.description, p)));
+    const photos = await Promise.all(search.photos.map((p) => searchPhoto(searchId, search.description, p)));
+    // Photos of people are declined: delete them now rather than in 7 days.
+    await Promise.all(photos.filter((p) => p.declined).map((p) => bucket().file(search.photos.find((s) => s.idx === p.idx)!.path).delete().catch(() => {})));
+    if (photos.every((p) => p.declined)) {
+      await failAndRefund(searchId, "These look like photos of people, and we don't search those. The photos were deleted.");
+      return;
+    }
     const result: SearchResult = {
       model: MODEL,
-      calls: photos.filter((p) => !p.skipped).length,
+      calls: photos.length,
       cost_usd: photos.reduce((s, p) => s + p.cost, 0),
-      photos: photos.map(({ cost: _cost, ...p }) => p), // eslint-disable-line @typescript-eslint/no-unused-vars
+      photos: photos.map(({ cost: _cost, declined: _declined, ...p }) => p), // eslint-disable-line @typescript-eslint/no-unused-vars
     };
-    db.prepare("UPDATE searches SET status = 'done', result_json = ?, duration_ms = ?, finished_at = datetime('now') WHERE id = ?").run(
-      JSON.stringify(result),
-      Date.now() - t0,
-      searchId,
-    );
+    await searchRef(searchId).update({
+      status: "done",
+      result_json: JSON.stringify(result),
+      duration_ms: Date.now() - t0,
+      finished_at: FieldValue.serverTimestamp(),
+    });
   } catch (err) {
-    const msg = err instanceof BudgetExceeded ? err.message : "The search hit a technical problem.";
+    const msg = err instanceof SpendCapReached ? "Searches are paused: we've hit today's AI budget." : "The search hit a technical problem.";
     console.error(`[search ${searchId}]`, err);
-    db.transaction(() => {
-      db.prepare("UPDATE searches SET status = 'failed', error = ?, finished_at = datetime('now') WHERE id = ?").run(msg, searchId);
-      db.prepare("UPDATE users SET credits = credits + 1 WHERE id = ?").run(search.user_id);
-    })();
+    await failAndRefund(searchId, msg);
   }
 }
 

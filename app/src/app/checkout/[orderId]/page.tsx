@@ -4,23 +4,22 @@ import { notFound, redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { getOrder } from "@/lib/orders";
 import { findPack, rands } from "@/lib/packs";
-import { checkoutFields, payfast } from "@/lib/payfast";
+import { checkoutFields, payfast, publicBaseUrl } from "@/lib/payfast";
 import { SiteShell } from "@/components/SiteShell";
 
 export const metadata: Metadata = { title: "Checkout · Lost Cause" };
-
-const APP_URL = process.env.APP_URL ?? "http://localhost:3000";
 
 async function Checkout({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = await params;
   const user = await currentUser();
   if (!user) redirect(`/signin?next=/checkout/${orderId}`);
 
-  const order = getOrder(orderId);
+  const order = await getOrder(orderId);
   const pack = order && findPack(order.pack_id);
   if (!order || !pack || order.user_id !== user.id) notFound();
   if (order.status !== "pending") redirect("/account");
 
+  const base = publicBaseUrl();
   // Signed server-side. The passphrase is hashed in, never sent.
   const fields = checkoutFields({
     orderId: order.id,
@@ -28,9 +27,9 @@ async function Checkout({ params }: { params: Promise<{ orderId: string }> }) {
     itemName: `Lost Cause: ${pack.name}`,
     itemDescription: `${pack.searches} searches`,
     email: user.email,
-    returnUrl: `${APP_URL}/checkout/return?order=${order.id}`,
-    cancelUrl: `${APP_URL}/checkout/cancel?order=${order.id}`,
-    notifyUrl: `${APP_URL}/api/payfast/notify`,
+    returnUrl: `${base}/checkout/return?order=${order.id}`,
+    cancelUrl: `${base}/checkout/cancel?order=${order.id}`,
+    notifyUrl: `${base}/api/payfast/notify`,
   });
 
   return (

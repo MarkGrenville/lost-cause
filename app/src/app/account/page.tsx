@@ -7,17 +7,20 @@ import { signOut } from "../signin/actions";
 import { SiteShell } from "@/components/SiteShell";
 import { ordersFor } from "@/lib/orders";
 import { findPack, rands } from "@/lib/packs";
+import { payfast } from "@/lib/payfast";
+import { WaitForItn } from "./WaitForItn";
 
 export const metadata: Metadata = { title: "Your account · Lost Cause" };
 
-type Flash = { paid?: string; pending?: string; cancelled?: string };
+type Flash = { paid?: string; pending?: string; cancelled?: string; slow?: string };
 
 async function Account({ searchParams }: { searchParams: Promise<Flash> }) {
   const user = await currentUser();
   if (!user) redirect("/signin?next=/account");
   const flash = await searchParams;
-  const orders = ordersFor(user.id);
-  const justPaid = flash.paid ? orders.find((o) => o.id === flash.paid && o.status === "paid") : undefined;
+  const orders = await ordersFor(user.id);
+  const landed = flash.paid ?? flash.pending;
+  const justPaid = landed ? orders.find((o) => o.id === landed && o.status === "paid") : undefined;
 
   return (
     <>
@@ -27,7 +30,7 @@ async function Account({ searchParams }: { searchParams: Promise<Flash> }) {
             +{justPaid.credits} credits landed. Go find that sock.
           </p>
           <p className="mt-1 font-semibold">
-            Order {justPaid.id} · R{rands(justPaid.amount_cents)} paid on the PayFast sandbox
+            Order {justPaid.id} · R{rands(justPaid.amount_cents)} paid{payfast.sandbox ? " on the PayFast sandbox" : " with PayFast"}
           </p>
           {justPaid.confirmed_via === "dev_return" && (
             <p className="mt-3 inline-block rounded-lg border-2 border-dashed border-ink bg-white/70 px-3 py-1.5 font-mono text-xs font-bold">
@@ -39,8 +42,12 @@ async function Account({ searchParams }: { searchParams: Promise<Flash> }) {
       {flash.cancelled && (
         <div className="pop-sm mb-10 rounded-2xl bg-white p-5 font-bold">Payment cancelled. No credits, no charge, no lecture.</div>
       )}
-      {flash.pending && (
-        <div className="pop-sm mb-10 rounded-2xl bg-white p-5 font-bold">
+      {flash.slow && (
+        <div className="pop-sm mb-10 rounded-2xl bg-white p-5 font-bold">That&apos;s a lot of orders in an hour. Try again a little later.</div>
+      )}
+      {flash.pending && !justPaid && (
+        <div className="pop-sm mb-10 rounded-2xl bg-white p-5 font-bold" data-testid="waiting-for-itn">
+          <WaitForItn />
           Waiting for PayFast to confirm order {flash.pending}. Credits appear as soon as it does.
         </div>
       )}

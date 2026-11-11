@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-/** A running timer while the AI looks, counted from when the server started the search (UTC). */
+/** A running timer while the AI looks, counted from when the server started the search. */
 export function Elapsed({ startedAt }: { startedAt: string | null }) {
-  const [start] = useState(() => (startedAt ? Date.parse(startedAt.replace(" ", "T") + "Z") : Date.now()));
+  const [start] = useState(() => (startedAt ? Date.parse(startedAt) : Date.now()));
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 100);

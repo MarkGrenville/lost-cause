@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 
 const MAX_PHOTOS = 5;
 const MAX_BYTES = 10 * 1024 * 1024;
-const ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif";
-const OK_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+// No HEIC: we strip location data before storing, and we can't decode HEIC to do that.
+// (iPhones convert to JPEG automatically when HEIC isn't accepted.)
+const ACCEPT = "image/jpeg,image/png,image/webp";
+const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 type Picked = { file: File; url: string | null; key: string };
 
@@ -37,8 +39,8 @@ export function FindForm({ credits }: { credits: number }) {
         setError(`Up to ${MAX_PHOTOS} photos per search.`);
         break;
       }
-      if (!OK_TYPES.includes(file.type) && !isHeic(file)) {
-        setError(`"${file.name}" isn't a JPEG, PNG, WebP or HEIC photo.`);
+      if (!OK_TYPES.includes(file.type) || isHeic(file)) {
+        setError(`"${file.name}" isn't a JPEG, PNG or WebP photo.`);
         continue;
       }
       if (file.size > MAX_BYTES) {
@@ -100,7 +102,7 @@ export function FindForm({ credits }: { credits: number }) {
           <div>
             <p className="text-2xl font-extrabold tracking-tight">Snap the scene</p>
             <p className="text-ink/70">
-              Drop 1–5 photos of where it was last seen. JPEG, PNG, WebP or HEIC, up to 10 MB each.
+              Drop 1–5 photos of where it was last seen. JPEG, PNG or WebP, up to 10 MB each. We strip location data, and delete photos after 7 days.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

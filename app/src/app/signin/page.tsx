@@ -4,13 +4,14 @@ import { redirect } from "next/navigation";
 import { currentUser, safeNext } from "@/lib/auth";
 import { SignInForm } from "./SignInForm";
 import { SiteShell } from "@/components/SiteShell";
+import { authEmulatorUrl, webConfig } from "@/lib/webConfig";
 
 export const metadata: Metadata = { title: "Sign in · Lost Cause" };
 
 async function SignIn({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const next = safeNext((await searchParams).next);
   if (await currentUser()) redirect(next);
-  return <SignInForm next={next} />;
+  return <SignInForm next={next} config={webConfig()} emulator={authEmulatorUrl()} />;
 }
 
 export default function Page(props: PageProps<"/signin">) {

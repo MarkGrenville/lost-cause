@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { creditOrder, getOrder } from "@/lib/orders";
-import { payfast } from "@/lib/payfast";
+import { payfast, publicBaseUrl } from "@/lib/payfast";
 
 /**
  * PayFast sends the buyer's browser here after paying (return_url).
@@ -18,14 +18,16 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const orderId = url.searchParams.get("order") ?? "";
   const user = await currentUser();
-  const order = getOrder(orderId);
-  const account = new URL("/account", url);
+  const order = await getOrder(orderId);
+  // The public address, not req.url: behind App Hosting that is the container (0.0.0.0:8080).
+  const account = new URL("/account", publicBaseUrl());
 
   if (!user || !order || order.user_id !== user.id) return NextResponse.redirect(account);
 
+  // Never in production, never in live mode: there, only a verified ITN adds credits.
   const devOnly = process.env.NODE_ENV !== "production" && payfast.sandbox;
   if (devOnly && order.status === "pending") {
-    creditOrder(order.id, "dev_return");
+    await creditOrder(order.id, "dev_return");
     account.searchParams.set("paid", order.id);
   } else {
     account.searchParams.set("pending", order.id);

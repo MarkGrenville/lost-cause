@@ -15,14 +15,40 @@ function env(name: string) {
   return v;
 }
 
+/**
+ * Sandbox and live differ ONLY by configuration: PAYFAST_MODE plus the merchant ID, key and
+ * passphrase. The host (and so the process and validate URLs) follows from the mode.
+ */
 export const payfast = {
+  get mode(): "sandbox" | "live" {
+    const m = env("PAYFAST_MODE");
+    if (m !== "sandbox" && m !== "live") throw new Error(`PAYFAST_MODE must be "sandbox" or "live", not "${m}"`);
+    return m;
+  },
+  get sandbox() { return this.mode === "sandbox"; },
   get merchantId() { return env("PAYFAST_MERCHANT_ID"); },
   get merchantKey() { return env("PAYFAST_MERCHANT_KEY"); },
-  get passphrase() { return process.env.PAYFAST_PASSPHRASE?.trim() || null; },
-  get processUrl() { return env("PAYFAST_PROCESS_URL"); },
-  get sandbox() { return process.env.PAYFAST_MODE !== "live"; },
+  get passphrase() {
+    const p = process.env.PAYFAST_PASSPHRASE?.trim() || null;
+    // PayFast requires a passphrase on live accounts; refuse to run live without one.
+    if (!p && this.mode === "live") throw new Error("PAYFAST_PASSPHRASE is required in live mode");
+    return p;
+  },
   get host() { return this.sandbox ? "sandbox.payfast.co.za" : "www.payfast.co.za"; },
+  get processUrl() { return `https://${this.host}/eng/process`; },
 };
+
+/**
+ * The site's public address (APP_URL). return_url, cancel_url and notify_url are built from it,
+ * never from the request's Host header. In production it must be https.
+ */
+export function publicBaseUrl() {
+  const raw = process.env.APP_URL ?? (process.env.NODE_ENV === "production" ? "" : "http://localhost:3000");
+  if (!raw) throw new Error("APP_URL (the public base URL) is not set");
+  const url = new URL(raw);
+  if (process.env.NODE_ENV === "production" && url.protocol !== "https:") throw new Error("APP_URL must be https in production");
+  return url.origin;
+}
 
 /** PHP urlencode(): what PayFast hashes. Spaces become "+", and !'()*~ are percent-encoded too. */
 export const pfEncode = (value: string) =>

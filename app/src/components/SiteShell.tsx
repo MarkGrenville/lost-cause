@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { currentUser } from "@/lib/auth";
+import { LegalLinks } from "./Legal";
 
 async function NavAccount() {
   const user = await currentUser();
@@ -52,8 +53,9 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       <Nav />
       <main className="min-h-[calc(100vh-64px)]">{children}</main>
       <footer className="border-t-[3px] border-ink bg-flare">
-        <div className="mx-auto max-w-6xl px-5 py-6 font-mono text-sm font-semibold">
-          Lost Cause · Not a real company (yet)
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6 font-mono text-sm font-semibold">
+          <span>Lost Cause by Web Footprint</span>
+          <LegalLinks />
         </div>
       </footer>
     </>

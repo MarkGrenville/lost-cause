@@ -1,0 +1,51 @@
+# Firebase App Hosting: how the live site runs. Non-secret settings are here in plain sight;
+# secrets are references to Cloud Secret Manager, set with
+#   firebase apphosting:secrets:set NAME --data-file <file>
+# and never typed, printed or committed.
+
+runConfig:
+  minInstances: 0     # scale to zero when nobody is looking for anything
+  maxInstances: 2     # a hard ceiling on cost while this is new
+  concurrency: 40
+  cpu: 1
+  memoryMiB: 1024     # sharp needs room to tile 10 MB photos
+  timeoutSeconds: 120 # a 5-photo search takes ~10 s; this is generous
+
+env:
+  # --- Payments: sandbox and live differ only by these values ---
+  # Mark switches this to "live" (and the three PAYFAST_* secrets to the live ones) himself.
+  - variable: PAYFAST_MODE
+    value: sandbox
+  - variable: PAYFAST_MERCHANT_ID
+    secret: lost-cause-payfast-merchant-id
+  - variable: PAYFAST_MERCHANT_KEY
+    secret: lost-cause-payfast-merchant-key
+  - variable: PAYFAST_PASSPHRASE
+    secret: lost-cause-payfast-passphrase
+
+  # The public base URL. return_url, cancel_url and notify_url are built from it.
+  # The backend's own address (a custom domain can replace it later).
+  - variable: APP_URL
+    value: https://lost-cause--lost-cause-2026.europe-west4.hosted.app
+
+  # How many proxies append to X-Forwarded-For in front of the app. Measured from the first
+  # real sandbox ITN (11 Nov): "<PayFast>, <Google edge>, <Google front end>", so 3.
+  - variable: ITN_PROXY_HOPS
+    value: "3"
+
+  # The public Firebase web config the sign-in page hands to the browser (not a secret).
+  # App Hosting only provides FIREBASE_WEBAPP_CONFIG while building, so it's set here for runtime.
+  - variable: FIREBASE_WEBAPP_CONFIG
+    value: '{"apiKey":"AIzaSyB06Yxb2kBFQTxTBzKVjP5CsWMnBMSCCbs","authDomain":"lost-cause-2026.firebaseapp.com","projectId":"lost-cause-2026","storageBucket":"lost-cause-2026.firebasestorage.app","appId":"1:818254033810:web:235b5831a84ab398c1874b"}'
+    availability: [BUILD, RUNTIME]
+
+  # --- The AI ---
+  - variable: LOST_CAUSE_ANTHROPIC_API_KEY
+    secret: lost-cause-anthropic-api-key
+  - variable: LOST_CAUSE_MODEL
+    value: claude-sonnet-5-5
+  # Global daily AI spend cap in US dollars. After it, searches pause and take no credit.
+  - variable: LOST_CAUSE_DAILY_SPEND_CAP_USD
+    value: "5"
+  - variable: LOST_CAUSE_SEARCHES_PER_HOUR
+    value: "10"

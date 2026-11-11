@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "demo-lost-cause",
+    "prod": "lost-cause-2026"
+  },
+  "targets": {},
+  "etags": {}
+}

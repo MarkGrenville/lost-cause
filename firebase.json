@@ -1,0 +1,68 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "cleanup",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        "test.mjs"
+      ]
+    }
+  ],
+  "apphosting": [
+    {
+      "backendId": "lost-cause",
+      "rootDir": "app",
+      "ignore": [
+        "node_modules",
+        ".next",
+        ".env*",
+        "data",
+        "uploads",
+        "*.sqlite*",
+        "*.log",
+        "tsconfig.tsbuildinfo",
+        ".git",
+        "docs",
+        "test-photos",
+        "functions",
+        "emulator-data",
+        ".playwright-mcp",
+        ".nocturnal",
+        "CLAUDE.md",
+        "AGENTS.md"
+      ]
+    }
+  ],
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "storage": {
+      "port": 9199
+    },
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    },
+    "apphosting": {
+      "startCommand": "npm run dev",
+      "rootDirectory": "app"
+    },
+    "singleProjectMode": true
+  }
+}

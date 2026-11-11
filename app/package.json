@@ -6,11 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "emulators": "cd .. && firebase emulators:start --project demo-lost-cause --only auth,firestore,storage,functions",
+    "test:emulators": "tsx --conditions=react-server scripts/emulator-test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
-    "better-sqlite3": "^13.0.3",
+    "firebase": "^13.2.0",
+    "firebase-admin": "^14.5.0",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -20,13 +23,13 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",
-    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

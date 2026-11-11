@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
-import { getSearch, photosFor } from "@/lib/searches";
+import { failIfStuck, getSearch, PHOTO_DAYS } from "@/lib/searches";
 import { parseResult } from "@/lib/finder";
 import { SiteShell } from "@/components/SiteShell";
 import { SearchRunner } from "./SearchRunner";
@@ -51,9 +51,10 @@ async function SearchView({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await currentUser();
   if (!user) redirect(`/signin?next=/search/${id}`);
-  const search = getSearch(id);
+  let search = await getSearch(id);
   if (!search || search.user_id !== user.id) notFound();
-  const photos = photosFor(id);
+  if (await failIfStuck(search)) search = (await getSearch(id))!;
+  const photos = search.photos;
   const result = search.status === "done" ? parseResult(search.result_json) : null;
   const src = (idx: number) => `/api/searches/${search.id}/photos/${idx}`;
 
@@ -81,6 +82,8 @@ async function SearchView({ params }: { params: Promise<{ id: string }> }) {
             <section key={p.idx} className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
               {p.skipped ? (
                 <p className="pop-sm rounded-2xl bg-white p-5 font-bold">Photo {p.idx}: {p.skipped}</p>
+              ) : search.photos_deleted ? (
+                <p className="pop-sm rounded-2xl bg-white p-5 font-bold">Photo {p.idx} was deleted after {PHOTO_DAYS} days, as promised. The list of spots is still here.</p>
               ) : (
                 <Circles src={src(p.idx)} photo={p} />
               )}
@@ -132,19 +135,15 @@ async function SearchView({ params }: { params: Promise<{ id: string }> }) {
             {photos.map((p) => (
               <li key={p.idx} className="pop relative mx-auto w-fit overflow-hidden rounded-3xl bg-ink">
                 {(search.status === "waiting" || search.status === "searching") && <span className="scan-line" aria-hidden />}
-                {p.mime === "image/heic" ? (
-                  <div className="flex aspect-[4/3] items-center justify-center font-mono text-sm font-bold text-cream">HEIC photo {p.idx}</div>
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element -- private, auth-checked image route
-                  <img src={src(p.idx)} alt={`Scene photo ${p.idx}`} className="block max-h-[78vh] w-auto max-w-full" />
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element -- private, auth-checked image route */}
+                <img src={src(p.idx)} alt={`Scene photo ${p.idx}`} className="block max-h-[78vh] w-auto max-w-full" />
               </li>
             ))}
           </ul>
           <div className="pop-sm rounded-3xl bg-white p-6">
             <p className="font-mono text-xs font-bold uppercase tracking-wider text-ink/60">You lost</p>
             <p className="mt-2 whitespace-pre-line text-xl font-bold leading-snug">{search.description}</p>
-            <p className="mt-6 font-mono text-xs text-ink/60">1 credit spent · {photos.length} photo{photos.length === 1 ? "" : "s"}</p>
+            <p className="mt-6 font-mono text-xs text-ink/60">1 credit spent · {photos.length} photo{photos.length === 1 ? "" : "s"} · photos deleted after {PHOTO_DAYS} days</p>
           </div>
         </div>
       )}
