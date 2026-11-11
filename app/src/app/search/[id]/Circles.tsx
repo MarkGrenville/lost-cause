@@ -18,16 +18,19 @@ export function Circles({ src, photo }: { src: string; photo: PhotoResult }) {
         {candidates.map((c, i) => {
           const cx = (c.x0 + c.x1) / 2;
           const cy = (c.y0 + c.y1) / 2;
-          const r = Math.max((c.x1 - c.x0) / 2, (c.y1 - c.y0) / 2, minR) * 1.3;
+          // An ellipse that follows the box's own shape. (It was a circle from the box's longer
+          // side, so a wide, short box like keys in a tray got a ring far bigger than the keys.)
+          const rx = Math.max((c.x1 - c.x0) / 2, minR) * 1.2;
+          const ry = Math.max((c.y1 - c.y0) / 2, minR) * 1.2;
           const top = i === 0;
           const colour = top ? "#d9432f" : "#e8a33d";
-          const tick = r * 0.45;
+          const tick = Math.min(rx, ry) * 0.45;
           return (
             <g key={i} stroke={colour} fill="none" strokeWidth={top ? stroke * 1.6 : stroke} opacity={top ? 1 : 0.45 + c.confidence * 0.5}>
-              <circle cx={cx} cy={cy} r={r} strokeDasharray={top ? undefined : `${stroke * 6} ${stroke * 4}`} />
+              <ellipse cx={cx} cy={cy} rx={rx} ry={ry} strokeDasharray={top ? undefined : `${stroke * 6} ${stroke * 4}`} />
               {top && (
                 <path
-                  d={`M${cx} ${cy - r - tick}V${cy - r + tick * 0.4} M${cx} ${cy + r - tick * 0.4}V${cy + r + tick} M${cx - r - tick} ${cy}H${cx - r + tick * 0.4} M${cx + r - tick * 0.4} ${cy}H${cx + r + tick}`}
+                  d={`M${cx} ${cy - ry - tick}V${cy - ry + tick * 0.4} M${cx} ${cy + ry - tick * 0.4}V${cy + ry + tick} M${cx - rx - tick} ${cy}H${cx - rx + tick * 0.4} M${cx + rx - tick * 0.4} ${cy}H${cx + rx + tick}`}
                 />
               )}
             </g>
@@ -35,23 +38,29 @@ export function Circles({ src, photo }: { src: string; photo: PhotoResult }) {
         })}
       </svg>
       {candidates.map((c, i) => {
-        const r = Math.max((c.x1 - c.x0) / 2, (c.y1 - c.y0) / 2, minR) * 1.3;
+        const rx = Math.max((c.x1 - c.x0) / 2, minR) * 1.2;
+        const ry = Math.max((c.y1 - c.y0) / 2, minR) * 1.2;
         const x = (c.x0 + c.x1) / 2 / W;
         // Near an edge, the tag starts (or ends) at the ring's outer side instead of centring on it,
         // so it never runs off the photo. (Version 1's tags were clipped at the left edge.)
         const anchor = x < 0.3 ? "translate-x-0" : x > 0.7 ? "-translate-x-full" : "-translate-x-1/2";
-        const left = x < 0.3 ? Math.max(0, x - r / W) : x > 0.7 ? Math.min(1, x + r / W) : x;
+        const left = x < 0.3 ? Math.max(0, x - rx / W) : x > 0.7 ? Math.min(1, x + rx / W) : x;
+        // The tag sits under its ring, unless that would run off the bottom: then above it.
+        const cy = (c.y0 + c.y1) / 2;
+        const below = ((cy + ry * 1.45) / H) * 100;
+        const top = below <= 92 ? `${below}%` : `calc(${((cy - ry * 1.45) / H) * 100}% - 1.6rem)`;
         return (
           <span
             key={i}
             className={`label absolute ${anchor} whitespace-nowrap px-2 py-1 ${i === 0 ? "bg-signal text-ink" : "bg-cream/85 text-flare"}`}
             style={{
               left: `${left * 100}%`,
-              // just under the ring
-              top: `${Math.min(92, (((c.y0 + c.y1) / 2 + r * 1.45) / H) * 100)}%`,
+              top,
             }}
           >
-            #{i + 1} · {Math.round(c.confidence * 100)}% · {c.label}
+            {/* Faint guesses get just their number on the photo, so tags don't collide; the full
+                text is in the findings list beside it. */}
+            {i === 0 || c.confidence >= 0.4 ? `#${i + 1} · ${Math.round(c.confidence * 100)}% · ${c.label}` : `#${i + 1}`}
           </span>
         );
       })}

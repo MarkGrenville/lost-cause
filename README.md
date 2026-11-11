@@ -97,7 +97,6 @@ Version 1 was bright and jokey (a hand-drawn ring, sticker shadows, a "vs Mom" t
 - Google's sign-in window says "continue to lost-cause-2026.firebaseapp.com" (Firebase's default sign-in domain), not the site's own address.
 - **The AI can be wrong.** It works best when the item is visible somewhere in the photo. It can't see under cushions, and says so with low confidence.
 - The "photo of a person" check hasn't been tested against a real photo of a person yet.
-- Labels can overlap when two marks are close together.
 - There's no self-serve account deletion yet; it's by email (see the privacy page).
 - No custom domain yet.
 
